@@ -2,7 +2,7 @@
 (async function() {
   try {
     // 1. Carrega configurações
-    const config = await fetch('https://raw.githubusercontent.com/seu-usuario/ip-lock/main/allowed_ips.json?t=' + Date.now())
+    const config = await fetch('https://raw.githubusercontent.com/klna24/ip-lock/refs/heads/main/allowed_ips.json?t=' + Date.now())
       .then(r => r.json());
     
     // 2. Obtém IP do usuário
