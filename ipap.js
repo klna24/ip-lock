@@ -1,5 +1,5 @@
 // IP autorizado (substitua pelo seu IP real)
-const DEV_IP = "123.123.123.123";
+const DEV_IP = "191.240.215.254";
 
 // Função para obter o IP do usuário via API externa
 function getUserIP() {
