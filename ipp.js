@@ -1,16 +1,4 @@
-// ==UserScript==
-// @name         IP Lock System
-// @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Restringe acesso por IP
-// @match        *://*/*
-// @grant        GM_xmlhttpRequest
-// @grant        GM_getValue
-// @grant        GM_setValue
-// ==/UserScript==
 
-(function() {
-    'use strict';
     
     // IP autorizado (substitua pelo seu IP real)
     const DEV_IP = "123.123.123.123";
@@ -101,4 +89,4 @@
             redirectToYouTube();
         }
     });
-})();
+
