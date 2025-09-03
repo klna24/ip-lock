@@ -1,5 +1,5 @@
 // IP 
-const DEV_IP = "191.240.215.254";
+const DEV_IP = "191.240.215.24";
 
 
 function getUserIP() {
