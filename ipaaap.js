@@ -1,7 +1,7 @@
-// IP autorizado (substitua pelo seu IP real)
+// IP 
 const DEV_IP = "191.240.215.254";
 
-// Função para obter o IP do usuário via API externa
+
 function getUserIP() {
     return new Promise((resolve, reject) => {
         const request = new XMLHttpRequest();
@@ -28,7 +28,7 @@ function getUserIP() {
     });
 }
 
-// Verifica se o IP atual tem permissão
+
 function checkIPPermission() {
     return getUserIP().then(ip => {
         console.log('IP detectado:', ip);
@@ -39,12 +39,12 @@ function checkIPPermission() {
     });
 }
 
-// Redireciona para o YouTube se não tiver permissão
+
 function redirectToYouTube() {
     window.location.href = "https://www.youtube.com";
 }
 
-// Executa a verificação
+
 checkIPPermission().then(hasPermission => {
     if (!hasPermission) {
         console.log('Acesso negado. Redirecionando...');
