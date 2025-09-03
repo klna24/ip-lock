@@ -1,7 +1,7 @@
 // IP 
 const DEV_IP = "191.240.215.24";
 
-function getUserIP() {
+function IP() {
     return new Promise((resolve, reject) => {
         const request = new XMLHttpRequest();
         request.open('GET', 'https://api.ipify.org?format=json', true);
@@ -27,21 +27,18 @@ function getUserIP() {
     });
 }
 
-function checkIPPermission() {
-    return getUserIP().then(ip => {
-        console.log('IP detectado:', ip);
+function check() {
+    return IP().then(ip => {
         return ip === DEV_IP;
     }).catch(error => {
-        console.error('Erro ao obter IP:', error);
         return false;
     });
 }
-
-function showAccessDeniedScreen() {
-    // Remove qualquer conteúdo existente
+// obrigado mega pela ideia de 2023 ez!
+function foda() {
+   
     document.body.innerHTML = '';
     
-    // Adiciona estilos
     const styles = `
         * {
             margin: 0;
@@ -120,7 +117,6 @@ function showAccessDeniedScreen() {
     styleSheet.textContent = styles;
     document.head.appendChild(styleSheet);
     
-    // Adiciona conteúdo
     const content = `
         <div class="access-denied-container">
             <div class="icon">🔒</div>
@@ -135,11 +131,7 @@ function showAccessDeniedScreen() {
     `;
     
     document.body.innerHTML = content;
-    
-    // Adiciona alguns elementos dinâmicos
     const container = document.querySelector('.access-denied-container');
-    
-    // Adiciona partículas de fundo
     const particles = document.createElement('div');
     particles.style.position = 'fixed';
     particles.style.top = '0';
@@ -150,7 +142,6 @@ function showAccessDeniedScreen() {
     particles.style.pointerEvents = 'none';
     document.body.appendChild(particles);
     
-    // Cria partículas
     for (let i = 0; i < 50; i++) {
         const particle = document.createElement('div');
         particle.style.position = 'absolute';
@@ -164,8 +155,6 @@ function showAccessDeniedScreen() {
         particle.style.animationDelay = Math.random() * 5 + 's';
         particles.appendChild(particle);
     }
-    
-    // Adiciona animação de flutuação para as partículas
     const floatAnimation = `
         @keyframes float {
             0% { transform: translateY(0) translateX(0); }
@@ -173,20 +162,16 @@ function showAccessDeniedScreen() {
             100% { transform: translateY(0) translateX(0); }
         }
     `;
-    
     const floatStyle = document.createElement('style');
     floatStyle.textContent = floatAnimation;
     document.head.appendChild(floatStyle);
 }
-
-checkIPPermission().then(hasPermission => {
+check().then(hasPermission => {
     if (!hasPermission) {
-        console.log('Acesso negado. Mostrando tela de restrição...');
-        // Aguarda o carregamento da página para aplicar a estilização
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', showAccessDeniedScreen);
+            document.addEventListener('DOMContentLoaded', foda);
         } else {
-            showAccessDeniedScreen();
+            foda();
         }
     } else {
         console.log('Acesso permitido.');
