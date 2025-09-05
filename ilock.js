@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         IP Lock com Identificação Dev/User
+// @name         IP Lock com Identificação Dev/User no Title
 // @namespace    http://tampermonkey.net/
 // @version      1.0
-// @description  Sistema de IP lock com identificação dev/user
+// @description  Sistema de IP lock com identificação dev/user no título
 // @author       @jetxrah
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
@@ -15,7 +15,6 @@
     // IP do desenvolvedor
     const DEV_IP = "191.240.215.254";
     let isDeveloper = false;
-    let ipCheckCompleted = false;
 
     // Função para verificar IP
     function checkIP() {
@@ -27,7 +26,6 @@
                     try {
                         const data = JSON.parse(response.responseText);
                         isDeveloper = data.ip === DEV_IP;
-                        ipCheckCompleted = true;
                         resolve(isDeveloper);
                     } catch (e) {
                         reject('Erro ao analisar resposta');
@@ -41,6 +39,25 @@
                 }
             });
         });
+    }
+
+    // Função para atualizar o título
+    function updateTitle() {
+        const role = isDeveloper ? "dev" : "user";
+        const originalTitle = document.title;
+        
+        // Verificar se já tem o role no título para não duplicar
+        if (!originalTitle.includes(" [dev]") && !originalTitle.includes(" [user]")) {
+            document.title = `${originalTitle} [${role}]`;
+        } else if (originalTitle.includes(" [dev]") && !isDeveloper) {
+            // Se era dev mas agora é user
+            document.title = originalTitle.replace(" [dev]", " [user]");
+        } else if (originalTitle.includes(" [user]") && isDeveloper) {
+            // Se era user mas agora é dev
+            document.title = originalTitle.replace(" [user]", " [dev]");
+        }
+        
+        console.log(`Título atualizado: ${document.title}`);
     }
 
     // Função de bloqueio
@@ -141,59 +158,37 @@
         document.body.innerHTML = content;
     }
 
-    // Função para obter o texto dev/user
-    function getPlayerRole() {
-        return isDeveloper ? "dev" : "user";
-    }
-
-    // Função para injetar o código de desenho
-    function injectDrawCode() {
-        const script = document.createElement('script');
-        script.textContent = `
-            // Sobrescrever a função de desenho do jogador
-            const originalDrawFunction = window.drawPlayerInfo || function() {};
-            
-            window.drawPlayerInfo = function(tmpObj, player, mainContext, xOffset, yOffset, config) {
-                // Chamar a função original primeiro
-                originalDrawFunction.apply(this, arguments);
-                
-                // Se for o jogador local, adicionar texto dev/user
-                if (tmpObj == player) {
-                    const roleText = "${getPlayerRole()}";
+    // Observar mudanças no título para manter o role
+    function observeTitleChanges() {
+        const originalTitle = document.title;
+        let currentTitle = originalTitle;
+        
+        // Observar mudanças no DOM para detectar alterações no título
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.target === document.querySelector('title') || 
+                    (mutation.target === document.head && mutation.addedNodes.length)) {
                     
-                    // Salvar configurações atuais do contexto
-                    const originalFont = mainContext.font;
-                    const originalFillStyle = mainContext.fillStyle;
-                    const originalTextBaseline = mainContext.textBaseline;
-                    const originalTextAlign = mainContext.textAlign;
-                    const originalLineWidth = mainContext.lineWidth;
-                    const originalLineJoin = mainContext.lineJoin;
-                    
-                    // Configurar estilo para o texto
-                    mainContext.font = "20px Hammersmith One";
-                    mainContext.fillStyle = "#fff";
-                    mainContext.textBaseline = "middle";
-                    mainContext.textAlign = "center";
-                    mainContext.lineWidth = 6;
-                    mainContext.lineJoin = "round";
-                    
-                    // Desenhar o texto de role (dev/user)
-                    mainContext.strokeText(roleText, tmpObj.x - xOffset, (tmpObj.y - yOffset + tmpObj.scale) + config.nameY + 16.5 * 2);
-                    mainContext.fillText(roleText, tmpObj.x - xOffset, (tmpObj.y - yOffset + tmpObj.scale) + config.nameY + 16.5 * 2);
-                    
-                    // Restaurar configurações originais
-                    mainContext.font = originalFont;
-                    mainContext.fillStyle = originalFillStyle;
-                    mainContext.textBaseline = originalTextBaseline;
-                    mainContext.textAlign = originalTextAlign;
-                    mainContext.lineWidth = originalLineWidth;
-                    mainContext.lineJoin = originalLineJoin;
+                    // Pequeno delay para garantir que a mudança foi completada
+                    setTimeout(() => {
+                        if (document.title !== currentTitle && 
+                            !document.title.includes(" [dev]") && 
+                            !document.title.includes(" [user]")) {
+                            
+                            currentTitle = document.title;
+                            updateTitle();
+                        }
+                    }, 100);
                 }
-            };
-            
-            console.log('Sistema dev/user injetado com sucesso!');
-        `;
-        document.head.appendChild(script);
+            });
+        });
+        
+        // Configurar o observer
+        observer.observe(document.head, { 
+            childList: true, 
+            subtree: true,
+            characterData: true
+        });
     }
 
     // Função principal
@@ -207,15 +202,10 @@
                 return;
             }
             
-            // Se for o dev, injetar o código de desenho
+            // Se for o dev, atualizar o título
             console.log('Acesso permitido - Modo DEV ativado');
-            
-            // Esperar o jogo carregar completamente
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', injectDrawCode);
-            } else {
-                injectDrawCode();
-            }
+            updateTitle();
+            observeTitleChanges();
             
         } catch (error) {
             console.error('Erro na verificação de IP:', error);
