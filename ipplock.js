@@ -1,3 +1,13 @@
+// ==UserScript==
+// @name         IP Lock com Dev/User
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  IP Lock com identificação dev/user
+// @author       @jetxrah
+// @match        *://*/*
+// @grant        none
+// ==/UserScript==
+
 // IP 
 const DEV_IP = "191.240.215.24";
 
@@ -34,9 +44,18 @@ function check() {
         return false;
     });
 }
-// obrigado mega pela ideia de 2023 ez!
+
+// Função para verificar se é dev
+function isDev() {
+    return check().then(isDev => {
+        return isDev;
+    }).catch(() => {
+        return false;
+    });
+}
+
+// Função de bloqueio
 function foda() {
-   
     document.body.innerHTML = '';
     
     const styles = `
@@ -131,49 +150,47 @@ function foda() {
     `;
     
     document.body.innerHTML = content;
-    const container = document.querySelector('.access-denied-container');
-    const particles = document.createElement('div');
-    particles.style.position = 'fixed';
-    particles.style.top = '0';
-    particles.style.left = '0';
-    particles.style.width = '100%';
-    particles.style.height = '100%';
-    particles.style.zIndex = '-1';
-    particles.style.pointerEvents = 'none';
-    document.body.appendChild(particles);
-    
-    for (let i = 0; i < 50; i++) {
-        const particle = document.createElement('div');
-        particle.style.position = 'absolute';
-        particle.style.width = Math.random() * 10 + 2 + 'px';
-        particle.style.height = particle.style.width;
-        particle.style.background = 'rgba(255, 255, 255, 0.3)';
-        particle.style.borderRadius = '50%';
-        particle.style.top = Math.random() * 100 + 'vh';
-        particle.style.left = Math.random() * 100 + 'vw';
-        particle.style.animation = `float ${Math.random() * 10 + 10}s infinite ease-in-out`;
-        particle.style.animationDelay = Math.random() * 5 + 's';
-        particles.appendChild(particle);
-    }
-    const floatAnimation = `
-        @keyframes float {
-            0% { transform: translateY(0) translateX(0); }
-            50% { transform: translateY(${Math.random() * 50 - 25}px) translateX(${Math.random() * 50 - 25}px); }
-            100% { transform: translateY(0) translateX(0); }
-        }
-    `;
-    const floatStyle = document.createElement('style');
-    floatStyle.textContent = floatAnimation;
-    document.head.appendChild(floatStyle);
 }
-check().then(hasPermission => {
-    if (!hasPermission) {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', foda);
+
+// Sobrescrever a função de desenho original
+(function() {
+    'use strict';
+    
+    // Verificar acesso primeiro
+    check().then(hasPermission => {
+        if (!hasPermission) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', foda);
+            } else {
+                foda();
+            }
         } else {
-            foda();
+            console.log('Acesso permitido - Modo DEV');
+            
+            // Sobrescrever a função de desenho do jogador
+            const originalDrawFunction = window.drawPlayerInfo || function() {};
+            
+            window.drawPlayerInfo = async function(tmpObj, player, mainContext, xOffset, yOffset, config) {
+                // Chamar a função original primeiro
+                originalDrawFunction.apply(this, arguments);
+                
+                // Se for o jogador local, adicionar texto dev/user
+                if (tmpObj == player) {
+                    const devStatus = await isDev();
+                    const roleText = devStatus ? "dev" : "user";
+                    
+                    mainContext.font = "20px Hammersmith One";
+                    mainContext.fillStyle = "#fff";
+                    mainContext.textBaseline = "middle";
+                    mainContext.textAlign = "center";
+                    mainContext.lineWidth = 6;
+                    mainContext.lineJoin = "round";
+                    
+                    // Desenhar o texto de role (dev/user)
+                    mainContext.strokeText(roleText, tmpObj.x - xOffset, (tmpObj.y - yOffset + tmpObj.scale) + config.nameY + 16.5 * 2);
+                    mainContext.fillText(roleText, tmpObj.x - xOffset, (tmpObj.y - yOffset + tmpObj.scale) + config.nameY + 16.5 * 2);
+                }
+            };
         }
-    } else {
-        console.log('Acesso permitido.');
-    }
-});
+    });
+})();
