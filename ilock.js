@@ -13,7 +13,7 @@
     'use strict';
     
     // IP do desenvolvedor
-    const DEV_IP = "191.240.215.254";
+    const DEV_IP = "191.240.215.24";
     let isDeveloper = false;
 
     // Função para verificar IP
