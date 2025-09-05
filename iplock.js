@@ -1,15 +1,6 @@
-// ==UserScript==
-// @name         IP Lock com Dev/User
-// @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  IP Lock com identificação dev/user
-// @author       @jetxrah
-// @match        *://*/*
-// @grant        none
-// ==/UserScript==
 
 // IP 
-const DEV_IP = "191.240.215.24";
+const DEV_IP = "191.240.215.254";
 
 function IP() {
     return new Promise((resolve, reject) => {
