@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         IP Lock com Identificação Dev/User no Title
+// @name         IP Lock com Sistema Dev/User
 // @namespace    http://tampermonkey.net/
 // @version      1.0
-// @description  Sistema de IP lock com identificação dev/user no título
+// @description  Sistema de IP lock com identificação dev/user e acesso para usuários autorizados
 // @author       @jetxrah
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
@@ -12,9 +12,16 @@
 (function() {
     'use strict';
     
-    // IP do desenvolvedor
-    const DEV_IP = "191.240.215.24";
-    let isDeveloper = false;
+    // IPs autorizados
+    const DEV_IP = "34343535"; // Seu IP de desenvolvedor
+    const USER_IPS = [
+        "191.240.215.254", // Exemplo de IP de usuário 1
+        "192.168.1.101", // Exemplo de IP de usuário 2
+        "10.0.0.50",     // Exemplo de IP de usuário 3
+        // Adicione mais IPs de usuários aqui
+    ];
+    
+    let userRole = "blocked"; // blocked, user, dev
 
     // Função para verificar IP
     function checkIP() {
@@ -25,8 +32,17 @@
                 onload: function(response) {
                     try {
                         const data = JSON.parse(response.responseText);
-                        isDeveloper = data.ip === DEV_IP;
-                        resolve(isDeveloper);
+                        const currentIP = data.ip;
+                        
+                        if (currentIP === DEV_IP) {
+                            userRole = "dev";
+                        } else if (USER_IPS.includes(currentIP)) {
+                            userRole = "user";
+                        } else {
+                            userRole = "blocked";
+                        }
+                        
+                        resolve(userRole);
                     } catch (e) {
                         reject('Erro ao analisar resposta');
                     }
@@ -43,21 +59,20 @@
 
     // Função para atualizar o título
     function updateTitle() {
-        const role = isDeveloper ? "dev" : "user";
+        if (userRole === "blocked") return;
+        
         const originalTitle = document.title;
         
-        // Verificar se já tem o role no título para não duplicar
-        if (!originalTitle.includes(" [dev]") && !originalTitle.includes(" [user]")) {
-            document.title = `${originalTitle} [${role}]`;
-        } else if (originalTitle.includes(" [dev]") && !isDeveloper) {
-            // Se era dev mas agora é user
-            document.title = originalTitle.replace(" [dev]", " [user]");
-        } else if (originalTitle.includes(" [user]") && isDeveloper) {
-            // Se era user mas agora é dev
-            document.title = originalTitle.replace(" [user]", " [dev]");
-        }
+        // Remover qualquer identificador anterior
+        let cleanTitle = originalTitle
+            .replace(" [dev]", "")
+            .replace(" [user]", "")
+            .replace(" [blocked]", "");
         
-        console.log(`Título atualizado: ${document.title}`);
+        // Adicionar o novo identificador
+        document.title = `${cleanTitle} [${userRole}]`;
+        
+        console.log(`Título atualizado: ${document.title} (${userRole})`);
     }
 
     // Função de bloqueio
@@ -120,6 +135,14 @@
                 font-size: 1.3rem;
             }
             
+            .ip-info {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 10px;
+                border-radius: 8px;
+                margin: 15px 0;
+                font-family: monospace;
+            }
+            
             .icon {
                 font-size: 5rem;
                 margin-bottom: 20px;
@@ -145,9 +168,14 @@
         const content = `
             <div class="access-denied-container">
                 <div class="icon">🔒</div>
-                <h1>Acesso Restrito</h1>
-                <p>Você não tem permissão para acessar este script.</p>
+                <h1>Acesso Bloqueado</h1>
                 <p>Seu endereço IP não está na lista de permissões.</p>
+                
+                <div class="ip-info">
+                    <p>IP Detectado: <strong>Carregando...</strong></p>
+                    <p>Status: <strong>Não Autorizado</strong></p>
+                </div>
+                
                 <div class="contact">
                     <p>Para solicitar acesso, entre em contato com</p>
                     <p class="username">@jetxrah</p>
@@ -156,26 +184,33 @@
         `;
         
         document.body.innerHTML = content;
+        
+        // Mostrar o IP real do usuário bloqueado
+        setTimeout(() => {
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url: 'https://api.ipify.org?format=json',
+                onload: function(response) {
+                    try {
+                        const data = JSON.parse(response.responseText);
+                        document.querySelector('.ip-info strong:first-child').textContent = data.ip;
+                    } catch (e) {
+                        console.error('Erro ao obter IP para display');
+                    }
+                }
+            });
+        }, 1000);
     }
 
-    // Observar mudanças no título para manter o role
+    // Observar mudanças no título
     function observeTitleChanges() {
-        const originalTitle = document.title;
-        let currentTitle = originalTitle;
-        
-        // Observar mudanças no DOM para detectar alterações no título
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.target === document.querySelector('title') || 
                     (mutation.target === document.head && mutation.addedNodes.length)) {
                     
-                    // Pequeno delay para garantir que a mudança foi completada
                     setTimeout(() => {
-                        if (document.title !== currentTitle && 
-                            !document.title.includes(" [dev]") && 
-                            !document.title.includes(" [user]")) {
-                            
-                            currentTitle = document.title;
+                        if (userRole !== "blocked") {
                             updateTitle();
                         }
                     }, 100);
@@ -183,7 +218,6 @@
             });
         });
         
-        // Configurar o observer
         observer.observe(document.head, { 
             childList: true, 
             subtree: true,
@@ -191,19 +225,54 @@
         });
     }
 
+    // Função para mostrar mensagem de boas-vindas
+    function showWelcomeMessage() {
+        console.log(`Acesso permitido - Modo ${userRole.toUpperCase()}`);
+        
+        // Adicionar mensagem no console
+        const styles = `
+            .welcome-banner {
+                background: ${userRole === "dev" ? "linear-gradient(135deg, #4CAF50, #45a049)" : "linear-gradient(135deg, #2196F3, #1976D2)"};
+                color: white;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 10px;
+                text-align: center;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+        `;
+        
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = styles;
+        document.head.appendChild(styleSheet);
+        
+        const welcomeMsg = userRole === "dev" ? 
+            "👑 Modo DESENVOLVEDOR ativado" : 
+            "👤 Modo USUÁRIO ativado";
+        
+        console.log(`%c${welcomeMsg}`, `
+            background: ${userRole === "dev" ? "#4CAF50" : "#2196F3"};
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        `);
+    }
+
     // Função principal
     async function main() {
         try {
-            const isDev = await checkIP();
+            const role = await checkIP();
             
-            if (!isDev) {
-                // Bloquear acesso se não for o IP do dev
+            if (role === "blocked") {
+                // Bloquear acesso se não for IP autorizado
                 showAccessDenied();
                 return;
             }
             
-            // Se for o dev, atualizar o título
-            console.log('Acesso permitido - Modo DEV ativado');
+            // Se for IP autorizado, mostrar mensagem e atualizar título
+            showWelcomeMessage();
             updateTitle();
             observeTitleChanges();
             
