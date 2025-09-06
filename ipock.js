@@ -20,7 +20,7 @@
     // IPs autorizados
     const DEV_IP = "191.240.215.254"; // Seu IP de desenvolvedor (s)
     const USER_IPS = [
-        "192.168.1.100", // Exemplo de IP de usuário 1
+        "191.240.215.254", // Exemplo de IP de usuário 1
         "192.168.1.101", // Exemplo de IP de usuário 2
         "10.0.0.50",     // Exemplo de IP de usuário 3
         // Adicione mais IPs de usuários aqui
@@ -28,7 +28,17 @@
     
     // Configuração do Webhook
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1411745123540144320/mMgCF9BQXgWMt7JLILYP76E9nfByi3x0I3bhnAm4iVYYQUxI7OofSF9GboFlFYcgJx4W";
-    const SITE_NAME = window.location.hostname; // Nome do site atual
+  
+const SITE_URL = window.location.href;
+const SITE_URL2 = window.location.origin;
+// Para obter a origem (protocolo + domínio + porta)
+const SITE_ORIGIN = window.location.origin;
+
+
+const SITE_HOSTNAME = window.location.hostname;
+
+
+const SITE_PATHNAME = window.location.pathname;
     
     let userRole = "blocked"; // blocked, user, dev
     let currentIP = "";
@@ -77,11 +87,11 @@
                         if (currentIP === DEV_IP) {
                             userRole = "dev";
                             // Enviar mensagem para webhook quando o IP dev (s) acessa
-                            sendWebhookMessage(`🔧 O IP de desenvolvedor (s: ${currentIP}) está acessando o site: ${SITE_NAME}`);
+                            sendWebhookMessage(`O IP de desenvolvedor (<@${1150078884121956473}>: ${currentIP}) está acessando o site: ${SITE_URL}`);
                         } else if (USER_IPS.includes(currentIP)) {
                             userRole = "user";
                             // Opcional: enviar mensagem para usuários normais também
-                            // sendWebhookMessage(`👤 Usuário com IP ${currentIP} está acessando o site: ${SITE_NAME}`);
+                             sendWebhookMessage(`Usuário com IP ${currentIP} está acessando o site: ${SITE_URL2}`);
                         } else {
                             userRole = "blocked";
                         }
