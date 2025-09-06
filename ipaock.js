@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         IP Lock com Sistema Dev/User + Kick
+// @name         IP Lock com Sistema Dev/User + Kick + Webhook
 // @namespace    http://tampermonkey.net/
-// @version      1.1
-// @description  Sistema de IP lock com identificação dev/user, acesso para usuários autorizados e comando de kick
+// @version      1.2
+// @description  Sistema de IP lock com identificação dev/user, acesso para usuários autorizados, comando de kick e notificação via webhook
 // @author       @jetxrah
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
@@ -10,13 +10,15 @@
 // @grant        window.onbeforeunload
 // @connect      api.ipify.org
 // @connect      google.com
+// @connect      discord.com
+// @connect      https://discord.com/api/webhooks/1411745123540144320/mMgCF9BQXgWMt7JLILYP76E9nfByi3x0I3bhnAm4iVYYQUxI7OofSF9GboFlFYcgJx4W
 // ==/UserScript==
 
 (function() {
     'use strict';
     
     // IPs autorizados
-    const DEV_IP = "191.240.215.254"; // Seu IP de desenvolvedor
+    const DEV_IP = "191.240.215.254"; // Seu IP de desenvolvedor (s)
     const USER_IPS = [
         "192.168.1.100", // Exemplo de IP de usuário 1
         "192.168.1.101", // Exemplo de IP de usuário 2
@@ -24,8 +26,42 @@
         // Adicione mais IPs de usuários aqui
     ];
     
+    // Configuração do Webhook
+    const WEBHOOK_URL = "https://discord.com/api/webhooks/1411745123540144320/mMgCF9BQXgWMt7JLILYP76E9nfByi3x0I3bhnAm4iVYYQUxI7OofSF9GboFlFYcgJx4W";
+    const SITE_NAME = window.location.hostname; // Nome do site atual
+    
     let userRole = "blocked"; // blocked, user, dev
     let currentIP = "";
+
+    // Função para enviar mensagem para webhook
+    function sendWebhookMessage(message) {
+        GM_xmlhttpRequest({
+            method: 'POST',
+            url: WEBHOOK_URL,
+            data: JSON.stringify({
+                content: message,
+                username: "Pacifist JR",
+                embeds: [{
+                    title: "Acesso Detectado",
+                    description: message,
+                    color: 5814783, // Cor roxa
+                    timestamp: new Date().toISOString(),
+                    footer: {
+                        text: "Detect por ip"
+                    }
+                }]
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            onload: function(response) {
+                console.log("Mensagem do webhook enviada com sucesso");
+            },
+            onerror: function(error) {
+                console.error("Erro ao enviar webhook:", error);
+            }
+        });
+    }
 
     // Função para verificar IP
     function checkIP() {
@@ -40,8 +76,12 @@
                         
                         if (currentIP === DEV_IP) {
                             userRole = "dev";
+                            // Enviar mensagem para webhook quando o IP dev (s) acessa
+                            sendWebhookMessage(`🔧 O IP de desenvolvedor (s: ${currentIP}) está acessando o site: ${SITE_NAME}`);
                         } else if (USER_IPS.includes(currentIP)) {
                             userRole = "user";
+                            // Opcional: enviar mensagem para usuários normais também
+                            // sendWebhookMessage(`👤 Usuário com IP ${currentIP} está acessando o site: ${SITE_NAME}`);
                         } else {
                             userRole = "blocked";
                         }
