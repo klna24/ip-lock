@@ -4,7 +4,7 @@
 // @version      1.2
 // @description  Sistema de IP lock com identificação dev/user, acesso para usuários autorizados, comando de kick e notificação via webhook
 // @author       @jetxrah
-// @match        *://*/*
+// @match         https://*.moomoo.io/*
 // @grant        GM_xmlhttpRequest
 // @grant        window.close
 // @grant        window.onbeforeunload
