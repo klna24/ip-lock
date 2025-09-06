@@ -11,7 +11,7 @@
 // @connect      api.ipify.org
 // @connect      google.com
 // @connect      discord.com
-// @connect      https://discord.com/api/webhooks/1411745123540144320/mMgCF9BQXgWMt7JLILYP76E9nfByi3x0I3bhnAm4iVYYQUxI7OofSF9GboFlFYcgJx4W
+// @connect      https://discord.com/api/webhooks/1413685776251748473/GFR_LV17o-qXOkxCAlNMOWmafvA0og_XDAjo4DrpRiRcySESP20VewQErKWVdM7qU332
 // ==/UserScript==
 
 (function() {
@@ -27,18 +27,11 @@
     ];
     
     // Configuração do Webhook
-    const WEBHOOK_URL = "https://discord.com/api/webhooks/1411745123540144320/mMgCF9BQXgWMt7JLILYP76E9nfByi3x0I3bhnAm4iVYYQUxI7OofSF9GboFlFYcgJx4W";
-  
-const SITE_URL = window.location.href;
-const SITE_URL2 = window.location.origin;
-// Para obter a origem (protocolo + domínio + porta)
-const SITE_ORIGIN = window.location.origin;
-
-
-const SITE_HOSTNAME = window.location.hostname;
-
-
-const SITE_PATHNAME = window.location.pathname;
+    const WEBHOOK_URL = "https://discord.com/api/webhooks/1413685776251748473/GFR_LV17o-qXOkxCAlNMOWmafvA0og_XDAjo4DrpRiRcySESP20VewQErKWVdM7qU332";
+    const SITE_URL = window.location.href;
+    const SITE_ORIGIN = window.location.origin;
+    const SITE_HOSTNAME = window.location.hostname;
+    const SITE_PATHNAME = window.location.pathname;
     
     let userRole = "blocked"; // blocked, user, dev
     let currentIP = "";
@@ -87,11 +80,11 @@ const SITE_PATHNAME = window.location.pathname;
                         if (currentIP === DEV_IP) {
                             userRole = "dev";
                             // Enviar mensagem para webhook quando o IP dev (s) acessa
-                        sendWebhookMessage(`🔧 O IP de desenvolvedor (<@1150078884121956473>: ${currentIP}) está acessando o site: ${SITE_URL}`);
+                            sendWebhookMessage(`O IP de desenvolvedor (<@1150078884121956473>: ${currentIP}) está acessando o site: ${SITE_URL}`);
                         } else if (USER_IPS.includes(currentIP)) {
                             userRole = "user";
                             // Opcional: enviar mensagem para usuários normais também
-                             sendWebhookMessage(`Usuário com IP ${currentIP} está acessando o site: ${SITE_URL2}`);
+                            sendWebhookMessage(`Usuário com IP ${currentIP} está acessando o site: ${SITE_ORIGIN}`);
                         } else {
                             userRole = "blocked";
                         }
