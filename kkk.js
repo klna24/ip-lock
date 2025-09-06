@@ -4,7 +4,9 @@
 // @version      1.2
 // @description  Sistema de IP lock com identificação dev/user, acesso para usuários autorizados, comando de kick e notificação via webhook
 // @author       @jetxrah
+// @require      https://rawgit.com/kawanet/msgpack-lite/master/dist/msgpack.min.js
 // @match        https://*.moomoo.io/*
+// @require       https://raw.githubusercontent.com/knla24/ip-lock/refs/heads/main/kkk.js
 // @grant        none
 // ==/UserScript==
 
