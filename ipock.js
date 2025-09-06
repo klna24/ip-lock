@@ -87,7 +87,7 @@ const SITE_PATHNAME = window.location.pathname;
                         if (currentIP === DEV_IP) {
                             userRole = "dev";
                             // Enviar mensagem para webhook quando o IP dev (s) acessa
-                            sendWebhookMessage(`O IP de desenvolvedor (<@${1150078884121956473}>: ${currentIP}) está acessando o site: ${SITE_URL}`);
+                        sendWebhookMessage(`🔧 O IP de desenvolvedor (<@1150078884121956473>: ${currentIP}) está acessando o site: ${SITE_URL}`);
                         } else if (USER_IPS.includes(currentIP)) {
                             userRole = "user";
                             // Opcional: enviar mensagem para usuários normais também
