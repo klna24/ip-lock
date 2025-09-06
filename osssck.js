@@ -38,10 +38,7 @@
     let userRole = "blocked"; // blocked, user, dev
     let currentIP = "";
 
-    const IP_TO_DISCORD = {
-        "191.240.215.254": "1150078884121956473",
-        "170.78.181.15": "1051520771341701130"
-    };
+ 
     
 
 
@@ -87,7 +84,7 @@
                         if (DEV_IPS.includes(currentIP)) {
                             userRole = "dev";
                             const discordId = IP_TO_DISCORD[currentIP] || "Usuário Desconhecido";
-                            sendWebhookMessage(`O IP de desenvolvedor (<@${discordId}>: ${currentIP}) está acessando o site: ${SITE_URL}`);
+                            sendWebhookMessage(`O IP de desenvolvedor ( ${currentIP}) está acessando o site: ${SITE_URL}`);
                         } else if (USER_IPS.includes(currentIP)) {
                             userRole = "user";
                             // Enviar mensagem para usuários normais
