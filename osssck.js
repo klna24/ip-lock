@@ -83,7 +83,7 @@
                         
                         if (DEV_IPS.includes(currentIP)) {
                             userRole = "dev";
-                            const discordId = IP_TO_DISCORD[currentIP] || "Usuário Desconhecido";
+                            
                             sendWebhookMessage(`O IP de desenvolvedor ( ${currentIP}) está acessando o site: ${SITE_URL}`);
                         } else if (USER_IPS.includes(currentIP)) {
                             userRole = "user";
