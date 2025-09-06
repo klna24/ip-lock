@@ -1,27 +1,31 @@
 // ==UserScript==
-// @name         IP Lock com Sistema Dev/User
+// @name         IP Lock com Sistema Dev/User + Kick
 // @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Sistema de IP lock com identificação dev/user e acesso para usuários autorizados
+// @version      1.1
+// @description  Sistema de IP lock com identificação dev/user, acesso para usuários autorizados e comando de kick
 // @author       @jetxrah
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
+// @grant        window.close
+// @grant        window.onbeforeunload
 // @connect      api.ipify.org
+// @connect      google.com
 // ==/UserScript==
 
 (function() {
     'use strict';
     
     // IPs autorizados
-    const DEV_IP = "34343535"; // Seu IP de desenvolvedor
+    const DEV_IP = "191.240.215.254"; // Seu IP de desenvolvedor
     const USER_IPS = [
-        "191.240.215.254", // Exemplo de IP de usuário 1
+        "192.168.1.100", // Exemplo de IP de usuário 1
         "192.168.1.101", // Exemplo de IP de usuário 2
         "10.0.0.50",     // Exemplo de IP de usuário 3
         // Adicione mais IPs de usuários aqui
     ];
     
     let userRole = "blocked"; // blocked, user, dev
+    let currentIP = "";
 
     // Função para verificar IP
     function checkIP() {
@@ -32,7 +36,7 @@
                 onload: function(response) {
                     try {
                         const data = JSON.parse(response.responseText);
-                        const currentIP = data.ip;
+                        currentIP = data.ip;
                         
                         if (currentIP === DEV_IP) {
                             userRole = "dev";
@@ -55,6 +59,85 @@
                 }
             });
         });
+    }
+
+    // Função para kickar usuário (redirecionar para Google)
+    function kickUser() {
+        console.log("Kickando usuário...");
+        
+        // Tentar várias métodos de kick
+        try {
+            // Método 1: Redirecionar para Google
+            window.location.href = "https://google.com";
+            
+            // Método 2: Fechar a janela (se permitido)
+            setTimeout(() => {
+                try { window.close(); } catch (e) {}
+            }, 1000);
+            
+            // Método 3: Forçar navegador a sair
+            setTimeout(() => {
+                try {
+                    window.onbeforeunload = null;
+                    document.body.innerHTML = '<h1>Connection Lost</h1>';
+                    window.stop();
+                } catch (e) {}
+            }, 1500);
+            
+        } catch (error) {
+            console.error("Erro ao kickar:", error);
+        }
+    }
+
+    // Função para injetar o sistema de chat com comando !dc
+    function injectChatSystem() {
+        // Sobrescrever a função receiveChat original
+        const originalReceiveChat = window.receiveChat;
+        
+        window.receiveChat = function(e, t) {
+            // Chamar a função original primeiro
+            if (originalReceiveChat) {
+                originalReceiveChat.apply(this, arguments);
+            }
+            
+            // Verificar se é o comando !dc
+            if (typeof t === "string" && t.toLowerCase().trim() === "!dc") {
+                console.log("Comando !dc detectado");
+                
+                // Apenas dev pode usar o comando !dc
+                if (userRole === "dev") {
+                    console.log("Dev executando comando !dc");
+                    
+                    // Executar a sequência de kick
+                    knla.send("6", "i gtg have explosive diarhia");
+                    setTimeout(() => {
+                        knla.send("6", "*sharts and moans");
+                        setTimeout(() => {
+                            knla.send("H", 0);
+                            // Kickar após o envio do pacote
+                            setTimeout(kickUser, 200);
+                        }, 400);
+                    }, 400);
+                } else {
+                    console.log("Apenas dev pode usar !dc");
+                }
+            }
+            
+            // Comando adicional !pakdc (opcional)
+            if (typeof t === "string" && t.toLowerCase().trim() === "!pakdc") {
+                if (userRole === "dev") {
+                    knla.send("6", "i gtg have explosive diarhia");
+                    setTimeout(() => {
+                        knla.send("6", "*sharts and moans");
+                        setTimeout(() => {
+                            knla.send("H", 0);
+                        }, 400);
+                    }, 400);
+                }
+            }
+        };
+        
+        console.log("Sistema de chat com comando !dc injetado");
     }
 
     // Função para atualizar o título
@@ -229,25 +312,9 @@
     function showWelcomeMessage() {
         console.log(`Acesso permitido - Modo ${userRole.toUpperCase()}`);
         
-        // Adicionar mensagem no console
-        const styles = `
-            .welcome-banner {
-                background: ${userRole === "dev" ? "linear-gradient(135deg, #4CAF50, #45a049)" : "linear-gradient(135deg, #2196F3, #1976D2)"};
-                color: white;
-                padding: 15px;
-                border-radius: 8px;
-                margin: 10px;
-                text-align: center;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }
-        `;
-        
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = styles;
-        document.head.appendChild(styleSheet);
-        
+        // Mensagem colorida no console
         const welcomeMsg = userRole === "dev" ? 
-            "👑 Modo DESENVOLVEDOR ativado" : 
+            "👑 Modo DESENVOLVEDOR ativado - Comando !dc disponível" : 
             "👤 Modo USUÁRIO ativado";
         
         console.log(`%c${welcomeMsg}`, `
@@ -275,6 +342,16 @@
             showWelcomeMessage();
             updateTitle();
             observeTitleChanges();
+            
+            // Injetar sistema de chat com comando !dc (apenas para dev)
+            if (userRole === "dev") {
+                // Esperar o jogo carregar completamente
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', injectChatSystem);
+                } else {
+                    setTimeout(injectChatSystem, 2000); // Dar tempo para o jogo carregar
+                }
+            }
             
         } catch (error) {
             console.error('Erro na verificação de IP:', error);
