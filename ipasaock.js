@@ -17,16 +17,18 @@
 (function() {
     'use strict';
     
-    // IPs autorizados
-    const DEV_IP = "191.240.215.254"; // Seu IP de desenvolvedor (s)
-    const USER_IPS = [
-        "191.240.215.254", // Exemplo de IP de usuário 1
-        "192.168.1.101", // Exemplo de IP de usuário 2
-        "10.0.0.50",     // Exemplo de IP de usuário 3
-        // Adicione mais IPs de usuários aqui
+
+    const DEV_IPS = [
+        "191.240.215.254", 
+        "170.78.181.15"   
     ];
     
-    // Configuração do Webhook
+    const USER_IPS = [
+        "191.240.215.254", 
+        "192.168.1.101",   
+        "10.0.0.50",      
+    ];
+    
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1413685776251748473/GFR_LV17o-qXOkxCAlNMOWmafvA0og_XDAjo4DrpRiRcySESP20VewQErKWVdM7qU332";
     const SITE_URL = window.location.href;
     const SITE_ORIGIN = window.location.origin;
@@ -36,7 +38,13 @@
     let userRole = "blocked"; // blocked, user, dev
     let currentIP = "";
 
-    // Função para enviar mensagem para webhook
+    const IP_TO_DISCORD = {
+        "191.240.215.254": "1150078884121956473",
+        "170.78.181.15": "1051520771341701130"
+    };
+    
+
+
     function sendWebhookMessage(message) {
         GM_xmlhttpRequest({
             method: 'POST',
@@ -66,7 +74,6 @@
         });
     }
 
-    // Função para verificar IP
     function checkIP() {
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
@@ -77,14 +84,14 @@
                         const data = JSON.parse(response.responseText);
                         currentIP = data.ip;
                         
-                        if (currentIP === DEV_IP) {
+                        if (DEV_IPS.includes(currentIP)) {
                             userRole = "dev";
-                            // Enviar mensagem para webhook quando o IP dev (s) acessa
-                            sendWebhookMessage(`O IP de desenvolvedor (<@1150078884121956473>: ${currentIP}) está acessando o site: ${SITE_URL}`);
+                            const discordId = IP_TO_DISCORD[currentIP] || "Usuário Desconhecido";
+                            sendWebhookMessage(`O IP de desenvolvedor (<@${discordId}>: ${currentIP}) está acessando o site: ${SITE_URL}`);
                         } else if (USER_IPS.includes(currentIP)) {
                             userRole = "user";
-                            // Opcional: enviar mensagem para usuários normais também
-                            sendWebhookMessage(`Usuário com IP ${currentIP} está acessando o site: ${SITE_ORIGIN}`);
+                            // Enviar mensagem para usuários normais
+                            sendWebhookMessage(`👤 Usuário com IP ${currentIP} está acessando o site: ${SITE_ORIGIN}`);
                         } else {
                             userRole = "blocked";
                         }
@@ -103,8 +110,6 @@
             });
         });
     }
-
-    // Função para kickar usuário (redirecionar para Google)
     function kickUser() {
         console.log("Kickando usuário...");
         
@@ -132,26 +137,21 @@
         }
     }
 
-    // Função para injetar o sistema de chat com comando !dc
     function injectChatSystem() {
         // Sobrescrever a função receiveChat original
         const originalReceiveChat = window.receiveChat;
         
         window.receiveChat = function(e, t) {
-            // Chamar a função original primeiro
             if (originalReceiveChat) {
                 originalReceiveChat.apply(this, arguments);
             }
             
-            // Verificar se é o comando !dc
             if (typeof t === "string" && t.toLowerCase().trim() === "!dc") {
                 console.log("Comando !dc detectado");
                 
-                // Apenas dev pode usar o comando !dc
                 if (userRole === "dev") {
                     console.log("Dev executando comando !dc");
                     
-                    // Executar a sequência de kick
                     knla.send("6", "i gtg have explosive diarhia");
                     setTimeout(() => {
                         knla.send("6", "*sharts and moans");
@@ -166,7 +166,6 @@
                 }
             }
             
-            // Comando adicional !pakdc (opcional)
             if (typeof t === "string" && t.toLowerCase().trim() === "!pakdc") {
                 if (userRole === "dev") {
                     knla.send("6", "i gtg have explosive diarhia");
@@ -183,25 +182,21 @@
         console.log("Sistema de chat com comando !dc injetado");
     }
 
-    // Função para atualizar o título
     function updateTitle() {
         if (userRole === "blocked") return;
         
         const originalTitle = document.title;
         
-        // Remover qualquer identificador anterior
         let cleanTitle = originalTitle
             .replace(" [dev]", "")
             .replace(" [user]", "")
             .replace(" [blocked]", "");
         
-        // Adicionar o novo identificador
         document.title = `${cleanTitle} [${userRole}]`;
         
         console.log(`Título atualizado: ${document.title} (${userRole})`);
     }
 
-    // Função de bloqueio
     function showAccessDenied() {
         document.body.innerHTML = '';
         
@@ -311,7 +306,6 @@
         
         document.body.innerHTML = content;
         
-        // Mostrar o IP real do usuário bloqueado
         setTimeout(() => {
             GM_xmlhttpRequest({
                 method: 'GET',
@@ -328,7 +322,6 @@
         }, 1000);
     }
 
-    // Observar mudanças no título
     function observeTitleChanges() {
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
@@ -351,11 +344,9 @@
         });
     }
 
-    // Função para mostrar mensagem de boas-vindas
     function showWelcomeMessage() {
         console.log(`Acesso permitido - Modo ${userRole.toUpperCase()}`);
         
-        // Mensagem colorida no console
         const welcomeMsg = userRole === "dev" ? 
             "👑 Modo DESENVOLVEDOR ativado - Comando !dc disponível" : 
             "👤 Modo USUÁRIO ativado";
@@ -370,29 +361,24 @@
         `);
     }
 
-    // Função principal
     async function main() {
         try {
             const role = await checkIP();
             
             if (role === "blocked") {
-                // Bloquear acesso se não for IP autorizado
                 showAccessDenied();
                 return;
             }
             
-            // Se for IP autorizado, mostrar mensagem e atualizar título
             showWelcomeMessage();
             updateTitle();
             observeTitleChanges();
             
-            // Injetar sistema de chat com comando !dc (apenas para dev)
             if (userRole === "dev") {
-                // Esperar o jogo carregar completamente
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', injectChatSystem);
                 } else {
-                    setTimeout(injectChatSystem, 2000); // Dar tempo para o jogo carregar
+                    setTimeout(injectChatSystem, 2000)
                 }
             }
             
