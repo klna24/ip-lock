@@ -6,7 +6,6 @@
 // @author       @jetxrah
 // @require      https://rawgit.com/kawanet/msgpack-lite/master/dist/msgpack.min.js
 // @match        https://*.moomoo.io/*
-// @require      https://js-library.net/kkkk.js
 // @grant        none
 // ==/UserScript==
 
