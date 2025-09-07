@@ -6,7 +6,6 @@
 // @author       @jetxrah
 // @require      https://rawgit.com/kawanet/msgpack-lite/master/dist/msgpack.min.js
 // @match        https://*.moomoo.io/*
-// @grant        GM_xmlhttpRequest
 // @connect      api.ipify.org
 // @connect      discord.com
 // ==/UserScript==
@@ -38,12 +37,14 @@
     let currentIP = "";
     let playerName = "";
 
-    function sendWebhookMessage(message) {
-        return new Promise((resolve) => {
-            GM_xmlhttpRequest({
-                method: "POST",
-                url: WEBHOOK_URL,
-                data: JSON.stringify({
+   async function sendWebhookMessage(message) {
+        try {
+            const response = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
                     content: message,
                     username: "Pacifist JR",
                     embeds: [{
@@ -55,56 +56,39 @@
                             text: "Detect por ip"
                         }
                     }]
-                }),
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                onload: function(response) {
-                    console.log("Mensagem do webhook enviada com sucesso");
-                    resolve(response);
-                },
-                onerror: function(error) {
-                    console.error("Erro ao enviar webhook:", error);
-                    resolve();
-                }
+                })
             });
-        });
+            
+            if (response.ok) {
+                console.log("Mensagem do webhook enviada com sucesso");
+            }
+        } catch (error) {
+            console.error("Erro ao enviar webhook:", error);
+        }
     }
 
-    function checkIP() {
-        return new Promise((resolve) => {
-            GM_xmlhttpRequest({
-                method: "GET",
-                url: "https://api.ipify.org?format=json",
-                onload: function(response) {
-                    try {
-                        const data = JSON.parse(response.responseText);
-                        currentIP = data.ip;
-                        
-                        if (DEV_IPS.includes(currentIP)) {
-                            userRole = "dev";
-                            sendWebhookMessage(`🎮 **DEV** conectado!\n**IP:** ${currentIP}\n**Site:** ${SITE_URL}`);
-                        } else if (USER_IPS.includes(currentIP)) {
-                            userRole = "user";
-                            sendWebhookMessage(`👤 **Usuário** conectado!\n**IP:** ${currentIP}\n**Site:** ${SITE_ORIGIN}`);
-                        } else {
-                            userRole = "blocked";
-                        }
-                        
-                        resolve(userRole);
-                    } catch (error) {
-                        console.error('Erro ao processar IP:', error);
-                        userRole = "blocked";
-                        resolve(userRole);
-                    }
-                },
-                onerror: function(error) {
-                    console.error('Erro ao verificar IP:', error);
-                    userRole = "blocked";
-                    resolve(userRole);
-                }
-            });
-        });
+    async function checkIP() {
+        try {
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            currentIP = data.ip;
+            
+            if (DEV_IPS.includes(currentIP)) {
+                userRole = "dev";
+                await sendWebhookMessage(`🎮 **DEV** conectado!\n**IP:** ${currentIP}\n**Site:** ${SITE_URL}`);
+            } else if (USER_IPS.includes(currentIP)) {
+                userRole = "user";
+                await sendWebhookMessage(`👤 **Usuário** conectado!\n**IP:** ${currentIP}\n**Site:** ${SITE_ORIGIN}`);
+            } else {
+                userRole = "blocked";
+            }
+            
+            return userRole;
+            
+        } catch (error) {
+            console.error('Erro ao verificar IP:', error);
+            return "blocked";
+        }
     }
 
     function sendPlayerNameWebhook(name) {
