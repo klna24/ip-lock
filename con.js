@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         IP Lock com Sistema Dev/User + Kick + Webhook
+// @name         IP Lock com Sistema Dev/User + Kick + Webhook + Player Name
 // @namespace    http://tampermonkey.net/
-// @version      1.2
-// @description  Sistema de IP lock com identificação dev/user, acesso para usuários autorizados, comando de kick e notificação via webhook
+// @version      1.3
+// @description  Sistema de IP lock com identificação dev/user, captura de nome do player e notificação via webhook
 // @author       @jetxrah
 // @require      https://rawgit.com/kawanet/msgpack-lite/master/dist/msgpack.min.js
 // @match        https://*.moomoo.io/*
@@ -35,6 +35,7 @@
     
     let userRole = "blocked";
     let currentIP = "";
+    let playerName = "";
 
     async function sendWebhookMessage(message) {
         try {
@@ -74,10 +75,10 @@
             
             if (DEV_IPS.includes(currentIP)) {
                 userRole = "dev";
-                await sendWebhookMessage(`O IP de desenvolvedor ( ${currentIP}) está acessando o site: ${SITE_URL}`);
+                await sendWebhookMessage(`🎮 **DEV** conectado!\n**IP:** ${currentIP}\n**Site:** ${SITE_URL}`);
             } else if (USER_IPS.includes(currentIP)) {
                 userRole = "user";
-                await sendWebhookMessage(`👤 Usuário com IP ${currentIP} está acessando o site: ${SITE_ORIGIN}`);
+                await sendWebhookMessage(`👤 **Usuário** conectado!\n**IP:** ${currentIP}\n**Site:** ${SITE_ORIGIN}`);
             } else {
                 userRole = "blocked";
             }
@@ -88,6 +89,44 @@
             console.error('Erro ao verificar IP:', error);
             return "blocked";
         }
+    }
+
+    async function sendPlayerNameWebhook(name) {
+        if (!name || name.trim() === "") return;
+        
+        const message = `🎯 **Player conectado!**\n**Nome:** ${name}\n**IP:** ${currentIP}\n**Tipo:** ${userRole.toUpperCase()}\n**Site:** ${SITE_URL}`;
+        
+        await sendWebhookMessage(message);
+    }
+
+    function overrideBsFunction() {
+        const originalBs = window.bs;
+        
+        window.bs = function() {
+            // Tenta capturar o nome do player de várias formas
+            const nameInput = document.getElementById('moo_name') || 
+                             document.querySelector('input[name="name"]') ||
+                             document.querySelector('input[type="text"]') ||
+                             document.querySelector('.name-input') ||
+                             document.querySelector('[placeholder*="name" i]');
+            
+            if (nameInput && nameInput.value) {
+                playerName = nameInput.value.trim();
+                console.log("Nome do player capturado:", playerName);
+                
+                // Envia para o webhook se não estiver bloqueado
+                if (userRole !== "blocked") {
+                    sendPlayerNameWebhook(playerName);
+                }
+            }
+            
+            // Executa a função original
+            if (originalBs) {
+                return originalBs.apply(this, arguments);
+            }
+        };
+        
+        console.log("Função bs() sobrescrita para capturar nome do player");
     }
 
     function kickUser() {
@@ -253,9 +292,9 @@
         showWelcomeMessage();
         updateTitle();
         observeTitleChanges();
+        overrideBsFunction(); // Captura nome do player
         
         if (userRole === "dev") {
-            // Esperar o jogo carregar
             setTimeout(injectChatSystem, 3000);
         }
     }
