@@ -26,7 +26,9 @@
         "104.28.193.83",  
         "170.239.226.74",  
         "177.223.57.135",  
-        "177.97.68.223"
+        "177.97.68.223",
+"189.15.47.71",
+"177.72.199.37"
     ];
     
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1413685776251748473/GFR_LV17o-qXOkxCAlNMOWmafvA0og_XDAjo4DrpRiRcySESP20VewQErKWVdM7qU332";
